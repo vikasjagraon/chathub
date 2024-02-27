@@ -1,0 +1,39 @@
+﻿@page
+
+@{
+   // ViewData["Title"] = "Chat";
+}
+
+<div id="chat">
+    <div id="messages"></div>
+    <input type="text" id="messageInput" />
+    <button id="sendButton">Send</button>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chathubmap")
+            .build();
+
+        connection.on("ReceiveMessage", (user, message) => {
+            const encodedUser = user;
+            const encodedMessage = message;
+            const messageDiv = document.createElement("div");
+            messageDiv.textContent = `${encodedUser}: ${encodedMessage}`;
+            document.getElementById("messages").appendChild(messageDiv);
+        });
+
+        document.getElementById("sendButton").addEventListener("click", event => {
+            const user = "User"; // Replace with the actual user name
+            const message = document.getElementById("messageInput").value;
+            connection.invoke("SendMessage", user, message).catch(err => console.error(err));
+            document.getElementById("messageInput").value = "";
+        });
+
+        connection.start().then(() => {
+            console.log("SignalR connection established.");
+        }).catch(err => console.error(err));
+    </script>
+}
